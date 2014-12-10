@@ -13,6 +13,7 @@
     "hubot-heroku-keepalive": "0.0.4",
     "hubot-idobata": "^0.2.0",
     "hubot-maps": "0.0.0",
+    "hubot-nnh": "https://github.com/bouzuya/hubot-nnh/archive/master.tar.gz",
     "hubot-pugme": "^0.1.0",
     "hubot-redis-brain": "0.0.2",
     "hubot-rules": "^0.1.0",
