@@ -1,8 +1,18 @@
+moment = require 'moment'
+
 module.exports = (robot) ->
   WEATHER_ID = 'weather_id'
+  KELVIN = 273.15
 
   getIDs = () ->
     return robot.brain.get(WEATHER_ID) or {}
+
+  getID = (k) ->
+    all = getIDs()
+    for key, val of all
+      if key == k
+        return val
+    return 0
 
   listGeo = (msg) ->
     source = getIDs()
@@ -40,9 +50,30 @@ module.exports = (robot) ->
 
 
   robot.respond /weather (.*)/i, (msg) ->
-    m = msg.match[1]
+    id = getID(msg.match[1])
+    if id==0
+      msg.send 'do not find id.'
+      return
+
     url = 'http://api.openweathermap.org/data/2.5/forecast?id=' + id
     request = msg.http(url).get()
     request (err, res, body) ->
       json = JSON.parse body
-      msg.send json.list[0].dt
+      voice = '現在からの天気です\n';
+
+      for obj, i in json.list
+        if i>10
+          break
+        d = moment.unix(obj.dt).format("MM/DD HH時")
+        weather = obj.weather[0].description
+        temp = obj.main.temp - KELVIN
+        temp = String(temp).substring(0, 4)
+        humidity = obj.main.humidity
+        # iconUrl = 'http://openweathermap.org/img/w/' + obj.weather[0].icon + '.png'
+        w_speed = obj.wind.speed
+        if obj.rain?
+          weather = weather+' 降雨量: '+obj.rain["3h"]+'mm'
+        if obj.snow?
+          weather = weather+' 降雪量: '+obj.snow["3h"]+'mm'
+        voice = voice+d+'  '+weather+' 気温: '+temp+'度, 湿度:'+humidity+'%, 風速: '+w_speed+'m/s\n'
+      msg.send voice
