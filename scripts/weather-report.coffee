@@ -6,7 +6,7 @@ module.exports = (robot) ->
 
   listGeo = (msg) ->
     source = getIDs()
-    list_msg = ''
+    list_msg = "now list : \n"
     for key, val of source
       list_msg = list_msg + "#{key} : #{val} \n"
     msg.send list_msg
@@ -36,7 +36,6 @@ module.exports = (robot) ->
       else
         msg.send "find and remove #{target}"
     robot.brain.set WEATHER_ID, new_source
-    msg.send "new list"
     listGeo(msg)
 
 
