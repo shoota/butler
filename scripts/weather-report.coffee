@@ -1,20 +1,49 @@
-request = require 'request'
-
 module.exports = (robot) ->
+  WEATHER_ID = 'weather_id'
+
+  getIDs = () ->
+    return robot.brain.get(WEATHER_ID) or {}
+
+  listGeo = (msg) ->
+    source = getIDs()
+    list_msg = ''
+    for key, val of source
+      list_msg = list_msg + "#{key} : #{val} \n"
+    msg.send list_msg
+
+  robot.hear /add_geo (.*)/i, (msg) ->
+    cmd = msg.match[1].split(/\ /)
+    key = cmd[0]
+    val = cmd[1]
+    if key!=undefined && val!=undefined
+      source = getIDs()
+      source[key] = val
+      robot.brain.set WEATHER_ID, source
+      msg.send 'add id done.'
+    else
+      msg.send 'sorry, your message wrong.'
+
+  robot.hear /li_geo/i, (msg) ->
+    listGeo(msg)
+
+  robot.hear /rm_geo (.*)/i, (msg) ->
+    target = msg.match[1]
+    source = getIDs()
+    new_source = {}
+    for key, val of source
+      if key != target
+        new_source[key] = val
+      else
+        msg.send "find and remove #{target}"
+    robot.brain.set WEATHER_ID, new_source
+    msg.send "new list"
+    listGeo(msg)
+
+
   robot.respond /weather (.*)/i, (msg) ->
     m = msg.match[1]
-
-    if m=='八戸'
-      msg.send '八戸の天気を検索いたします'
-      id=2129530
-
     url = 'http://api.openweathermap.org/data/2.5/forecast?id=' + id
-    options = 
-      url : url
-      timeout : 2000
-
-    request options, (error, response, body) ->
-      # msg.send body
-      list = body.list;
-      
-    msg.send 'どうぞ'
+    request = msg.http(url).get()
+    request (err, res, body) ->
+      json = JSON.parse body
+      msg.send json.list[0].dt
